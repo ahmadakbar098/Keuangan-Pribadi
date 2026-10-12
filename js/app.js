@@ -9,11 +9,13 @@ const FilterHelper = {
     if (filterType === 'all') return transactions;
 
     const now = new Date();
-    const currentYear = now.getFullYear();
-    const currentMonth = String(now.getMonth() + 1).padStart(2, '0');
-    const currentDay = String(now.getDate()).padStart(2, '0');
-    const todayISO = `${currentYear}-${currentMonth}-${currentDay}`;
-    const thisMonthISO = `${currentYear}-${currentMonth}`;
+    // Mengambil tanggal lokal perangkat
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+
+    const todayISO = `${year}-${month}-${day}`;       // Contoh: 2026-10-12
+    const thisMonthISO = `${year}-${month}`;          // Contoh: 2026-10
 
     return transactions.filter(item => {
       if (!item.date) return false;
@@ -24,7 +26,7 @@ const FilterHelper = {
         case 'monthly':
           return item.date.startsWith(thisMonthISO);
         case 'yearly':
-          return item.date.startsWith(String(currentYear));
+          return item.date.startsWith(String(year));
         default:
           return true;
       }
@@ -98,16 +100,19 @@ const App = {
       });
     }
 
+    
     // Filter tombol waktu
     filterButtons.forEach(btn => {
       btn.addEventListener('click', (e) => {
         filterButtons.forEach(b => b.classList.remove('active'));
         e.target.classList.add('active');
 
-        AppState.currentFilter = e.target.dataset.period;
+        // Mengambil atribut data-period
+        AppState.currentFilter = e.target.dataset.period || 'all';
         this.refreshUI();
       });
     });
+
 
     // Klik Edit atau Hapus di riwayat
     if (transactionList) {

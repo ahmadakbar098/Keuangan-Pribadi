@@ -6,7 +6,7 @@ const CATEGORIES = {
     '💡 Tagihan & Utilitas',
     '🎮 Hiburan & Rekreasi',
     '📚 Pendidikan & Kuliah',
-    '💰 Tabungan / Investasi', // Kategori baru ditambahkan di sini
+    '💰 Tabungan / Investasi',
     '📦 Keperluan Lain'
   ],
   income: [
@@ -17,6 +17,13 @@ const CATEGORIES = {
     '📦 Pemasukan Lain'
   ]
 };
+
+const CHART_COLORS = [
+  '#f43f5e', '#fb923c', '#facc15', '#38bdf8',
+  '#818cf8', '#a855f7', '#34d399', '#94a3b8'
+];
+
+let chartInstance = null;
 
 const UI = {
   elements: {
@@ -211,7 +218,11 @@ const UI = {
 
     if (!canvas || !breakdownContainer) return;
 
-    // Filter transaksi tipe 'expense' saja
+    if (typeof Chart === 'undefined') {
+      console.warn('Library Chart.js belum aktif.');
+      return;
+    }
+
     const expenses = transactions.filter(t => t.type === 'expense');
     const totalExpense = expenses.reduce((sum, t) => sum + Number(t.amount), 0);
 
@@ -219,14 +230,17 @@ const UI = {
       centerTotal.textContent = this.formatRupiah(totalExpense);
     }
 
-    // Jika tidak ada data pengeluaran
+
     if (expenses.length === 0 || totalExpense === 0) {
-      if (chartInstance) chartInstance.destroy();
-      breakdownContainer.innerHTML = '<p style="text-align:center; color:var(--text-muted); font-size:0.85rem;">Belum ada data pengeluaran pada periode ini.</p>';
+      if (chartInstance) {
+        chartInstance.destroy();
+        chartInstance = null;
+      }
+      breakdownContainer.innerHTML = '<p style="text-align:center; color:var(--text-muted); font-size:0.85rem; padding: 12px 0;">Belum ada data pengeluaran pada periode ini.</p>';
       return;
     }
 
-    // Akumulasi nominal per kategori
+
     const categoryTotals = {};
     expenses.forEach(item => {
       categoryTotals[item.category] = (categoryTotals[item.category] || 0) + Number(item.amount);
@@ -236,45 +250,43 @@ const UI = {
     const dataValues = Object.values(categoryTotals);
     const bgColors = labels.map((_, index) => CHART_COLORS[index % CHART_COLORS.length]);
 
-    // Hancurkan chart lama jika ada sebelum membuat baru
+    
     if (chartInstance) {
       chartInstance.destroy();
     }
 
-    // Buat Donut Chart baru
-    chartInstance = new Chart(canvas, {
-      type: 'doughnut',
-      data: {
-        labels: labels,
-        datasets: [{
-          data: dataValues,
-          backgroundColor: bgColors,
-          borderWidth: 2,
-          borderColor: '#ffffff',
-          hoverOffset: 6
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        cutout: '70%', // Membentuk lubang donat
-        plugins: {
-          legend: {
-            display: false // Legenda kita buat custom di bawahnya
-          },
-          tooltip: {
-            callbacks: {
-              label: (context) => {
-                const val = context.raw || 0;
-                return ` ${this.formatRupiah(val)}`;
+    try {
+      chartInstance = new Chart(canvas, {
+        type: 'doughnut',
+        data: {
+          labels: labels,
+          datasets: [{
+            data: dataValues,
+            backgroundColor: bgColors,
+            borderWidth: 2,
+            borderColor: '#ffffff',
+            hoverOffset: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: '70%',
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: (context) => ` ${this.formatRupiah(context.raw || 0)}`
               }
             }
           }
         }
-      }
-    });
+      });
+    } catch (err) {
+      console.error('Gagal membuat diagram:', err);
+    }
 
-    // Render list rincian persentase di bawah chart
+
     breakdownContainer.innerHTML = labels
       .map((catName, idx) => {
         const amount = categoryTotals[catName];
