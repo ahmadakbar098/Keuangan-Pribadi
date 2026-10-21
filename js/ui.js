@@ -230,7 +230,6 @@ const UI = {
       centerTotal.textContent = this.formatRupiah(totalExpense);
     }
 
-
     if (expenses.length === 0 || totalExpense === 0) {
       if (chartInstance) {
         chartInstance.destroy();
@@ -240,17 +239,19 @@ const UI = {
       return;
     }
 
-
+    // 1. Hitung total per kategori
     const categoryTotals = {};
     expenses.forEach(item => {
       categoryTotals[item.category] = (categoryTotals[item.category] || 0) + Number(item.amount);
     });
 
-    const labels = Object.keys(categoryTotals);
-    const dataValues = Object.values(categoryTotals);
+    // 2. URUTKAN dari nominal terbesar ke terkecil (Descending)
+    const sortedEntries = Object.entries(categoryTotals).sort((a, b) => b[1] - a[1]);
+
+    const labels = sortedEntries.map(entry => entry[0]);
+    const dataValues = sortedEntries.map(entry => entry[1]);
     const bgColors = labels.map((_, index) => CHART_COLORS[index % CHART_COLORS.length]);
 
-    
     if (chartInstance) {
       chartInstance.destroy();
     }
@@ -286,10 +287,9 @@ const UI = {
       console.error('Gagal membuat diagram:', err);
     }
 
-
-    breakdownContainer.innerHTML = labels
-      .map((catName, idx) => {
-        const amount = categoryTotals[catName];
+    // 3. Render list rincian yang sudah berurutan dari terbesar ke terkecil
+    breakdownContainer.innerHTML = sortedEntries
+      .map(([catName, amount], idx) => {
         const percentage = Math.round((amount / totalExpense) * 100);
         const color = bgColors[idx];
 
