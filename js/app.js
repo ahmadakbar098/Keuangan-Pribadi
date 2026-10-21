@@ -15,7 +15,17 @@ const FilterHelper = {
     const day = String(now.getDate()).padStart(2, '0');
 
     const todayISO = `${year}-${month}-${day}`;       // Contoh: 2026-10-12
-    const thisMonthISO = `${year}-${month}`;          // Contoh: 2026-10
+    const thisMonthISO = `${year}-${month}`;
+    
+    const currentDayOfWeek = now.getDay(); // 0 = Minggu, 1 = Senin, ...
+    const distanceToMonday = (currentDayOfWeek + 6) % 7;
+    const startOfWeek = new Date(now);
+    startOfWeek.setDate(now.getDate() - distanceToMonday);
+    startOfWeek.setHours(0, 0, 0, 0);
+
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(startOfWeek.getDate() + 6);
+    endOfWeek.setHours(23, 59, 59, 999);
 
     return transactions.filter(item => {
       if (!item.date) return false;
