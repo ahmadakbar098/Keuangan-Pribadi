@@ -1,28 +1,25 @@
 const CATEGORIES = {
   expense: [
-    '🍜 Makanan & Minuman',
-    '🚗 Transportasi',
-    '🛍️ Belanja Pribadi',
-    '💡 Tagihan & Utilitas',
-    '🎮 Hiburan & Rekreasi',
-    '📚 Pendidikan & Kuliah',
-    '💰 Tabungan / Investasi',
-    '📦 Keperluan Lain'
+    '🏠 Kebutuhan Pokok',
+    '✨ Keinginan & Hiburan',
+    '💰 Tabungan & Investasi',
+    '📦 Lainnya'
   ],
   income: [
-    '💵 Kiriman / Uang Saku',
-    '💼 Gaji / Upah Freelance',
-    '🎁 Hadiah / Bonus',
-    '📈 Investasi / Penjualan',
+    '💵 Uang Saku',
+    '💼 Gaji & Freelance',
+    '🎁 Hadiah & Bonus',
+    '📈 Investasi',
     '📦 Pemasukan Lain'
   ]
 };
 
 const CHART_COLORS = [
-  '#f43f5e', '#fb923c', '#facc15', '#38bdf8',
-  '#818cf8', '#a855f7', '#34d399', '#94a3b8'
+  '#38bdf8', // Biru terang untuk Kebutuhan
+  '#fb923c', // Oranye untuk Keinginan
+  '#34d399', // Hijau mint untuk Tabungan
+  '#94a3b8'  // Abu-abu untuk Lainnya
 ];
-
 let chartInstance = null;
 
 const UI = {
