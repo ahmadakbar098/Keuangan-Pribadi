@@ -153,13 +153,69 @@ const App = {
 
     
     // Filter tombol waktu
-    filterButtons.forEach(btn => {
+// Filter modern 2 tingkat (Unit Waktu + Sub Toggle)
+    let activeUnit = 'all';
+    let activeShift = 'current';
+
+    const unitButtons = document.querySelectorAll('.unit-btn');
+    const shiftButtons = document.querySelectorAll('.shift-btn');
+    const shiftContainer = document.getElementById('shiftControl');
+
+    const resolvePeriodKey = (unit, shift) => {
+      if (unit === 'all') return 'all';
+      if (unit === 'day') return shift === 'current' ? 'daily' : 'yesterday';
+      if (unit === 'week') return shift === 'current' ? 'weekly' : 'last-week';
+      if (unit === 'month') return shift === 'current' ? 'monthly' : 'last-month';
+      if (unit === 'year') return shift === 'current' ? 'yearly' : 'last-year';
+      return 'all';
+    };
+
+    // Klik tombol Baris 1 (Semua, Hari, Minggu, Bulan, Tahun)
+    unitButtons.forEach(btn => {
       btn.addEventListener('click', (e) => {
-        filterButtons.forEach(b => b.classList.remove('active'));
+        unitButtons.forEach(b => b.classList.remove('active'));
         e.target.classList.add('active');
 
-        // Mengambil atribut data-period
-        AppState.currentFilter = e.target.dataset.period || 'all';
+        activeUnit = e.target.dataset.unit;
+
+        if (activeUnit === 'all') {
+          if (shiftContainer) shiftContainer.style.display = 'none';
+        } else {
+          if (shiftContainer) {
+            shiftContainer.style.display = 'inline-flex';
+
+            const currentBtn = shiftContainer.querySelector('[data-shift="current"]');
+            const prevBtn = shiftContainer.querySelector('[data-shift="previous"]');
+
+            if (activeUnit === 'day') {
+              if (currentBtn) currentBtn.textContent = 'Hari Ini';
+              if (prevBtn) prevBtn.textContent = 'Kemarin';
+            } else if (activeUnit === 'week') {
+              if (currentBtn) currentBtn.textContent = 'Minggu Ini';
+              if (prevBtn) prevBtn.textContent = 'Minggu Lalu';
+            } else if (activeUnit === 'month') {
+              if (currentBtn) currentBtn.textContent = 'Bulan Ini';
+              if (prevBtn) prevBtn.textContent = 'Bulan Lalu';
+            } else if (activeUnit === 'year') {
+              if (currentBtn) currentBtn.textContent = 'Tahun Ini';
+              if (prevBtn) prevBtn.textContent = 'Tahun Lalu';
+            }
+          }
+        }
+
+        AppState.currentFilter = resolvePeriodKey(activeUnit, activeShift);
+        this.refreshUI();
+      });
+    });
+
+    // Klik tombol Baris 2 (Sekarang / Sebelumnya)
+    shiftButtons.forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        shiftButtons.forEach(b => b.classList.remove('active'));
+        e.target.classList.add('active');
+
+        activeShift = e.target.dataset.shift;
+        AppState.currentFilter = resolvePeriodKey(activeUnit, activeShift);
         this.refreshUI();
       });
     });
