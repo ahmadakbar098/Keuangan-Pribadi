@@ -6,26 +6,45 @@ const AppState = {
 
 const FilterHelper = {
   getFilteredTransactions(transactions, filterType) {
-    if (filterType === 'all') return transactions;
+    if (!filterType || filterType === 'all') return transactions;
 
     const now = new Date();
-    // Mengambil tanggal lokal perangkat
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const day = String(now.getDate()).padStart(2, '0');
+    const pad = (num) => String(num).padStart(2, '0');
 
-    const todayISO = `${year}-${month}-${day}`;       // Contoh: 2026-10-12
-    const thisMonthISO = `${year}-${month}`;
-    
-    const currentDayOfWeek = now.getDay(); // 0 = Minggu, 1 = Senin, ...
-    const distanceToMonday = (currentDayOfWeek + 6) % 7;
+    // Tanggal hari ini
+    const todayISO = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+
+    // Kemarin (H-1)
+    const yesterday = new Date(now);
+    yesterday.setDate(now.getDate() - 1);
+    const yesterdayISO = `${yesterday.getFullYear()}-${pad(yesterday.getMonth() + 1)}-${pad(yesterday.getDate())}`;
+
+    // Minggu Ini (Senin - Minggu berjalan)
+    const currentDay = now.getDay();
+    const distToMon = (currentDay + 6) % 7;
     const startOfWeek = new Date(now);
-    startOfWeek.setDate(now.getDate() - distanceToMonday);
+    startOfWeek.setDate(now.getDate() - distToMon);
     startOfWeek.setHours(0, 0, 0, 0);
 
     const endOfWeek = new Date(startOfWeek);
     endOfWeek.setDate(startOfWeek.getDate() + 6);
     endOfWeek.setHours(23, 59, 59, 999);
+
+    // Minggu Lalu (Senin - Minggu pekan sebelumnya)
+    const startOfLastWeek = new Date(startOfWeek);
+    startOfLastWeek.setDate(startOfWeek.getDate() - 7);
+
+    const endOfLastWeek = new Date(startOfWeek);
+    endOfLastWeek.setMilliseconds(-1);
+
+    // Bulan Ini & Bulan Lalu
+    const thisMonthISO = `${now.getFullYear()}-${pad(now.getMonth() + 1)}`;
+    const lastMonthDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const lastMonthISO = `${lastMonthDate.getFullYear()}-${pad(lastMonthDate.getMonth() + 1)}`;
+
+    // Tahun Ini & Tahun Lalu
+    const thisYearISO = String(now.getFullYear());
+    const lastYearISO = String(now.getFullYear() - 1);
 
     return transactions.filter(item => {
       if (!item.date) return false;
@@ -33,10 +52,32 @@ const FilterHelper = {
       switch (filterType) {
         case 'daily':
           return item.date === todayISO;
+
+        case 'yesterday':
+          return item.date === yesterdayISO;
+
+        case 'weekly': {
+          const d = new Date(`${item.date}T00:00:00`);
+          return d >= startOfWeek && d <= endOfWeek;
+        }
+
+        case 'last-week': {
+          const d = new Date(`${item.date}T00:00:00`);
+          return d >= startOfLastWeek && d <= endOfLastWeek;
+        }
+
         case 'monthly':
           return item.date.startsWith(thisMonthISO);
+
+        case 'last-month':
+          return item.date.startsWith(lastMonthISO);
+
         case 'yearly':
-          return item.date.startsWith(String(year));
+          return item.date.startsWith(thisYearISO);
+
+        case 'last-year':
+          return item.date.startsWith(lastYearISO);
+
         default:
           return true;
       }
